@@ -1,6 +1,6 @@
 # .github/workflows/pipeline.yml
 # ─────────────────────────────────────────────────────
-# CI/CD Pipeline - Runs automatically on schedule
+# CI/CD Pipeline - Runs automatically 2x daily
 # ─────────────────────────────────────────────────────
 
 name: Weather Data Pipeline
@@ -26,6 +26,10 @@ on:
         required: false
         default: 'Manual test run'
 
+# Fix for Node.js 24 compatibility
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   run-pipeline:
     # Use GitHub free Ubuntu server
@@ -42,16 +46,15 @@ jobs:
       # STEP 2: Setup Python
       # ─────────────────────────────────────
       - name: Set up Python 3.11
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
       # ─────────────────────────────────────
-      # STEP 3: Cache packages
-      # (makes subsequent runs faster)
+      # STEP 3: Cache packages (faster runs)
       # ─────────────────────────────────────
       - name: Cache pip packages
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
@@ -69,7 +72,7 @@ jobs:
 
       # ─────────────────────────────────────
       # STEP 5: Run the pipeline
-      # Secrets come from GitHub Secrets
+      # PYTHONPATH fixes module import error
       # ─────────────────────────────────────
       - name: Run Weather Pipeline
         env:
@@ -78,13 +81,14 @@ jobs:
           AWS_REGION: ${{ secrets.AWS_REGION }}
           S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          PYTHONPATH: ${{ github.workspace }}
         run: |
           echo "🚀 Starting pipeline..."
           python src/pipeline.py
           echo "✅ Pipeline complete!"
 
       # ─────────────────────────────────────
-      # STEP 6: Show S3 file count after run
+      # STEP 6: Verify S3 files after run
       # ─────────────────────────────────────
       - name: Verify S3 Upload
         env:
@@ -93,6 +97,7 @@ jobs:
           AWS_REGION: ${{ secrets.AWS_REGION }}
           S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          PYTHONPATH: ${{ github.workspace }}
         run: |
           python -c "
           import boto3, os
@@ -102,10 +107,14 @@ jobs:
               region_name=os.getenv('AWS_REGION')
           )
           folders = ['raw/', 'processed/', 'reports/', 'logs/']
-          print('S3 File Count:')
+          print('S3 File Count After Run:')
           for folder in folders:
-              r = s3.list_objects_v2(Bucket=os.getenv('S3_BUCKET_NAME'), Prefix=folder)
-              print(f'  {folder}: {len(r.get(\"Contents\", []))} files')
+              r = s3.list_objects_v2(
+                  Bucket=os.getenv('S3_BUCKET_NAME'), 
+                  Prefix=folder
+              )
+              count = len(r.get('Contents', []))
+              print(f'  {folder}: {count} files')
           "
 
       # ─────────────────────────────────────
