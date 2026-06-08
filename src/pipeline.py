@@ -12,7 +12,7 @@ This is what runs automatically via GitHub Actions.
 import json
 import time
 import boto3
-from datetime import datetime
+from datetime import datetime, timezone
 from loguru import logger
 from config.settings import (
     AWS_ACCESS_KEY_ID,
@@ -47,7 +47,7 @@ class WeatherPipeline:
 
         # Unique ID for this pipeline run
         # Used for tracking in S3 logs
-        self.run_id = datetime.now(datetime.timezone.utc).strftime("%Y%m%d_%H%M%S")
+        self.run_id = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
 
         # S3 client for saving logs
         self.s3 = boto3.client(
@@ -64,7 +64,7 @@ class WeatherPipeline:
             "run_id"          : self.run_id,
             "pipeline_name"   : PIPELINE_NAME,
             "pipeline_version": PIPELINE_VERSION,
-            "started_at_utc"  : datetime.now(datetime.timezone.utc).isoformat(),
+            "started_at_utc"  : datetime.now(timezone.utc).isoformat(),
             "status"          : "running",
             "steps"           : {}
         }
@@ -210,7 +210,7 @@ class WeatherPipeline:
             total_duration = round(time.time() - pipeline_start, 2)
 
             self.run_log["status"]        = "success"
-            self.run_log["completed_at"]  = datetime.now(datetime.timezone.utc).isoformat()
+            self.run_log["completed_at"]  = datetime.now(timezone.utc).isoformat()
             self.run_log["total_duration_sec"] = total_duration
             self.run_log["final_record_count"] = len(df_final)
 
@@ -241,7 +241,7 @@ class WeatherPipeline:
 
             self.run_log["status"]       = "failed"
             self.run_log["error"]        = str(e)
-            self.run_log["failed_at"]    = datetime.now(datetime.timezone.utc).isoformat()
+            self.run_log["failed_at"]    = datetime.now(timezone.utc).isoformat()
             self.run_log["total_duration_sec"] = total_duration
 
             # Save failed log to S3
