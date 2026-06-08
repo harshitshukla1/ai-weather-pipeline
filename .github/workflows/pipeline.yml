@@ -1,0 +1,119 @@
+# .github/workflows/pipeline.yml
+# ─────────────────────────────────────────────────────
+# CI/CD Pipeline - Runs automatically on schedule
+# ─────────────────────────────────────────────────────
+
+name: Weather Data Pipeline
+
+on:
+  # Run automatically on schedule
+  schedule:
+    # 6 AM IST = 00:30 UTC
+    - cron: '30 0 * * *'
+    # 6 PM IST = 12:30 UTC
+    - cron: '30 12 * * *'
+
+  # Run when code is pushed to main branch
+  push:
+    branches:
+      - main
+
+  # Run manually from GitHub Actions tab
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Why are you running manually?'
+        required: false
+        default: 'Manual test run'
+
+jobs:
+  run-pipeline:
+    # Use GitHub free Ubuntu server
+    runs-on: ubuntu-latest
+
+    steps:
+      # ─────────────────────────────────────
+      # STEP 1: Download your code
+      # ─────────────────────────────────────
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # ─────────────────────────────────────
+      # STEP 2: Setup Python
+      # ─────────────────────────────────────
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      # ─────────────────────────────────────
+      # STEP 3: Cache packages
+      # (makes subsequent runs faster)
+      # ─────────────────────────────────────
+      - name: Cache pip packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      # ─────────────────────────────────────
+      # STEP 4: Install packages
+      # ─────────────────────────────────────
+      - name: Install Dependencies
+        run: |
+          pip install --upgrade pip --quiet
+          pip install -r requirements.txt --quiet
+          echo "✅ Dependencies installed"
+
+      # ─────────────────────────────────────
+      # STEP 5: Run the pipeline
+      # Secrets come from GitHub Secrets
+      # ─────────────────────────────────────
+      - name: Run Weather Pipeline
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: |
+          echo "🚀 Starting pipeline..."
+          python src/pipeline.py
+          echo "✅ Pipeline complete!"
+
+      # ─────────────────────────────────────
+      # STEP 6: Show S3 file count after run
+      # ─────────────────────────────────────
+      - name: Verify S3 Upload
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: |
+          python -c "
+          import boto3, os
+          s3 = boto3.client('s3',
+              aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+              aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
+              region_name=os.getenv('AWS_REGION')
+          )
+          folders = ['raw/', 'processed/', 'reports/', 'logs/']
+          print('S3 File Count:')
+          for folder in folders:
+              r = s3.list_objects_v2(Bucket=os.getenv('S3_BUCKET_NAME'), Prefix=folder)
+              print(f'  {folder}: {len(r.get(\"Contents\", []))} files')
+          "
+
+      # ─────────────────────────────────────
+      # STEP 7: If pipeline fails, show error
+      # ─────────────────────────────────────
+      - name: Handle Failure
+        if: failure()
+        run: |
+          echo "❌ Pipeline failed!"
+          echo "Check logs above for details"
+          exit 1

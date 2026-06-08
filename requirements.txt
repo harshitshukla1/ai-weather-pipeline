@@ -1,0 +1,11 @@
+boto3
+botocore
+pandas
+numpy
+pyarrow
+requests
+groq
+python-dotenv
+loguru
+streamlit
+plotly
