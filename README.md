@@ -13,7 +13,7 @@
 
 ## 🌐 Live Demo
 
-🔗 **[View Live Dashboard →](https://your-app-name.streamlit.app)** *(Update with your URL after deployment)*
+🔗 **[View Live Dashboard →](https://ai-weather-pipeline-7gkbubm56yvofyvds9amax.streamlit.app/)** *(Update with your URL after deployment)*
 
 📊 **What's Live:**
 - Real-time weather data for 10+ cities globally
