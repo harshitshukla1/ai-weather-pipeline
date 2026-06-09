@@ -807,12 +807,29 @@ PAGES = [
 
 def main():
 
-    # Initialize page state
-    if 'current_page' not in st.session_state:
-        st.session_state.current_page = PAGES[0]
+    # ═══════════════════════════════════════════════
+    # MOBILE NAVIGATION (Top - Always visible on mobile)
+    # ═══════════════════════════════════════════════
+    st.markdown('<div class="mobile-nav-card">', unsafe_allow_html=True)
+    mobile_col1, mobile_col2 = st.columns([1, 3])
+    with mobile_col1:
+        st.markdown("""
+        <div style="color:#00d4ff; font-family:'Orbitron',monospace; 
+                    font-size:0.75rem; letter-spacing:2px; padding-top:8px;">
+            ◈ MENU
+        </div>
+        """, unsafe_allow_html=True)
+    with mobile_col2:
+        mobile_page = st.selectbox(
+            "Select Page",
+            PAGES,
+            key="mobile_page_selector",
+            label_visibility="collapsed"
+        )
+    st.markdown('</div>', unsafe_allow_html=True)
 
     # ═══════════════════════════════════════════════
-    # SIDEBAR (works on desktop, click ☰ on mobile)
+    # SIDEBAR NAVIGATION
     # ═══════════════════════════════════════════════
     with st.sidebar:
         st.markdown("""
@@ -833,10 +850,8 @@ def main():
         sidebar_page = st.radio(
             "◈ NAVIGATE",
             PAGES,
-            index=PAGES.index(st.session_state.current_page),
-            key="sidebar_nav"
+            key="sidebar_page_selector"
         )
-        st.session_state.current_page = sidebar_page
 
         st.divider()
 
@@ -870,32 +885,34 @@ def main():
         """, unsafe_allow_html=True)
 
     # ═══════════════════════════════════════════════
-    # MOBILE NAVIGATION (Only shows on mobile/tablet)
+    # DETERMINE ACTIVE PAGE
+    # Priority: Mobile dropdown changes take priority
     # ═══════════════════════════════════════════════
-    st.markdown('<div class="mobile-nav-card">', unsafe_allow_html=True)
-    mobile_col1, mobile_col2 = st.columns([1, 3])
-    with mobile_col1:
-        st.markdown("""
-        <div style="color:#00d4ff; font-family:'Orbitron',monospace; 
-                    font-size:0.75rem; letter-spacing:2px; padding-top:8px;">
-            ◈ NAVIGATE
-        </div>
-        """, unsafe_allow_html=True)
-    with mobile_col2:
-        mobile_page = st.selectbox(
-            "Select Page",
-            PAGES,
-            index=PAGES.index(st.session_state.current_page),
-            key="mobile_nav",
-            label_visibility="collapsed"
-        )
-        if mobile_page != st.session_state.current_page:
-            st.session_state.current_page = mobile_page
-            st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Get last interaction to know which was clicked last
+    if 'last_mobile_page' not in st.session_state:
+        st.session_state.last_mobile_page = mobile_page
+    if 'last_sidebar_page' not in st.session_state:
+        st.session_state.last_sidebar_page = sidebar_page
+    
+    # If mobile changed, use mobile
+    if mobile_page != st.session_state.last_mobile_page:
+        page = mobile_page
+        st.session_state.last_mobile_page = mobile_page
+        st.session_state.last_sidebar_page = sidebar_page
+    # If sidebar changed, use sidebar  
+    elif sidebar_page != st.session_state.last_sidebar_page:
+        page = sidebar_page
+        st.session_state.last_sidebar_page = sidebar_page
+        st.session_state.last_mobile_page = mobile_page
+    else:
+        # Default to sidebar (desktop) or mobile (mobile)
+        page = sidebar_page
 
-    # Use the selected page
-    page = st.session_state.current_page
+    # Load data
+    df, source = load_latest_data()
+    report = load_latest_report()
+    logs = load_pipeline_logs()
 
     # Load data
     df, source = load_latest_data()
