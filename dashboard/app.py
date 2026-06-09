@@ -175,7 +175,6 @@ hr {
    EXPANDER FIX — HIDE BROKEN MATERIAL ICONS
    ════════════════════════════════════════════ */
 
-/* Hide the broken material icon text completely */
 [data-testid="stExpander"] [data-testid="stIconMaterial"],
 .streamlit-expanderHeader [data-testid="stIconMaterial"],
 details summary span[data-testid="stIconMaterial"],
@@ -187,7 +186,6 @@ span[data-testid="stIconMaterial"] {
     height: 0 !important;
 }
 
-/* Custom arrow using CSS pseudo-element */
 [data-testid="stExpander"] details summary::before {
     content: '▶' !important;
     color: #00d4ff !important;
@@ -201,7 +199,6 @@ span[data-testid="stIconMaterial"] {
     transform: rotate(90deg) !important;
 }
 
-/* Hide native marker */
 [data-testid="stExpander"] summary::-webkit-details-marker,
 [data-testid="stExpander"] summary::marker {
     display: none !important;
@@ -213,7 +210,6 @@ span[data-testid="stIconMaterial"] {
     cursor: pointer !important;
 }
 
-/* Expander styling */
 [data-testid="stExpander"] details {
     background: rgba(0,212,255,0.03) !important;
     border: 1px solid rgba(0,212,255,0.15) !important;
@@ -457,23 +453,54 @@ a:hover {
 """, unsafe_allow_html=True)
 
 
+# ═══════════════════════════════════════════════
+# SECRETS HANDLER - Works for both local & cloud
+# ═══════════════════════════════════════════════
+def get_secret(key):
+    """Get secret from Streamlit Cloud secrets OR local .env file"""
+    try:
+        # Try Streamlit Cloud secrets first
+        return st.secrets[key]
+    except (KeyError, FileNotFoundError, Exception):
+        pass
+    # Fall back to environment variable
+    value = os.getenv(key)
+    return value if value else None
+
+
 @st.cache_resource
 def get_s3_client():
+    """Create S3 client using secrets from cloud or local env"""
+    access_key = get_secret("AWS_ACCESS_KEY_ID")
+    secret_key = get_secret("AWS_SECRET_ACCESS_KEY")
+    region = get_secret("AWS_REGION")
+    
+    if not all([access_key, secret_key, region]):
+        return None
+    
     return boto3.client(
         "s3",
-        aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
-        aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
-        region_name=os.getenv("AWS_REGION")
+        aws_access_key_id=access_key,
+        aws_secret_access_key=secret_key,
+        region_name=region
     )
+
 
 @st.cache_data(ttl=1800)
 def load_latest_data():
+    """Load latest processed weather data from S3"""
     s3 = get_s3_client()
-    bucket = os.getenv("S3_BUCKET_NAME")
+    bucket = get_secret("S3_BUCKET_NAME")
+    
+    if not s3:
+        return None, "S3 client could not be created. Check AWS credentials."
+    if not bucket:
+        return None, "S3_BUCKET_NAME secret is missing"
+    
     try:
         r = s3.list_objects_v2(Bucket=bucket, Prefix="processed/weather/")
         if "Contents" not in r:
-            return None, "No data"
+            return None, f"No data found in s3://{bucket}/processed/weather/"
         files = sorted(r["Contents"], key=lambda x: x["LastModified"], reverse=True)
         obj = s3.get_object(Bucket=bucket, Key=files[0]["Key"])
         import io
@@ -481,10 +508,16 @@ def load_latest_data():
     except Exception as e:
         return None, str(e)
 
+
 @st.cache_data(ttl=1800)
 def load_latest_report():
+    """Load latest AI report from S3"""
     s3 = get_s3_client()
-    bucket = os.getenv("S3_BUCKET_NAME")
+    bucket = get_secret("S3_BUCKET_NAME")
+    
+    if not s3 or not bucket:
+        return None
+    
     try:
         r = s3.list_objects_v2(Bucket=bucket, Prefix="reports/")
         if "Contents" not in r:
@@ -492,13 +525,19 @@ def load_latest_report():
         files = sorted(r["Contents"], key=lambda x: x["LastModified"], reverse=True)
         obj = s3.get_object(Bucket=bucket, Key=files[0]["Key"])
         return json.loads(obj["Body"].read().decode("utf-8"))
-    except:
+    except Exception:
         return None
+
 
 @st.cache_data(ttl=1800)
 def load_pipeline_logs():
+    """Load pipeline run logs from S3"""
     s3 = get_s3_client()
-    bucket = os.getenv("S3_BUCKET_NAME")
+    bucket = get_secret("S3_BUCKET_NAME")
+    
+    if not s3 or not bucket:
+        return []
+    
     try:
         r = s3.list_objects_v2(Bucket=bucket, Prefix="logs/")
         if "Contents" not in r:
@@ -509,8 +548,57 @@ def load_pipeline_logs():
             obj = s3.get_object(Bucket=bucket, Key=f["Key"])
             logs.append(json.loads(obj["Body"].read().decode("utf-8")))
         return logs
-    except:
+    except Exception:
         return []
+
+
+def show_debug_info():
+    """Show debug info when data fails to load"""
+    with st.expander("🔧 DEBUG INFORMATION — Click to expand"):
+        st.markdown("### Secrets Status")
+        secrets_to_check = [
+            "AWS_ACCESS_KEY_ID",
+            "AWS_SECRET_ACCESS_KEY",
+            "AWS_REGION",
+            "S3_BUCKET_NAME",
+            "GROQ_API_KEY"
+        ]
+        for key in secrets_to_check:
+            value = get_secret(key)
+            if value:
+                # Show masked value
+                if key in ["AWS_SECRET_ACCESS_KEY", "GROQ_API_KEY", "AWS_ACCESS_KEY_ID"]:
+                    masked = value[:6] + "****" if len(value) > 6 else "****"
+                    st.success(f"✅ **{key}**: {masked}")
+                else:
+                    st.success(f"✅ **{key}**: {value}")
+            else:
+                st.error(f"❌ **{key}**: NOT SET")
+        
+        st.markdown("---")
+        st.markdown("### Common Fixes")
+        st.markdown("""
+        **1. If secrets show NOT SET:**
+        - Go to Streamlit Cloud → Your app → Settings → Secrets
+        - Paste secrets in TOML format:
+        ```toml
+        AWS_ACCESS_KEY_ID = "your_key_here"
+        AWS_SECRET_ACCESS_KEY = "your_secret_here"
+        AWS_REGION = "ap-south-2"
+        S3_BUCKET_NAME = "weather-pipeline-harshit-2025"
+        GROQ_API_KEY = "your_groq_key_here"
+        ```
+        - Click Save and wait for app restart
+        
+        **2. If secrets are set but data still missing:**
+        - Run pipeline locally: `python src/pipeline.py`
+        - Verify data exists in S3 bucket
+        - Check AWS region matches bucket region
+        
+        **3. If bucket access denied:**
+        - Verify IAM user has S3FullAccess permission
+        - Check bucket name spelling exactly
+        """)
 
 
 def dark_layout(fig, height=400):
@@ -600,6 +688,7 @@ def main():
 
         if df is None:
             st.error(f"❌ Data unavailable: {source}")
+            show_debug_info()
             return
 
         st.divider()
@@ -683,7 +772,8 @@ def main():
         """, unsafe_allow_html=True)
 
         if df is None:
-            st.error("No data")
+            st.error(f"❌ Data unavailable: {source}")
+            show_debug_info()
             return
 
         st.divider()
@@ -799,6 +889,7 @@ def main():
             with c3: st.metric("RAINING CITIES", stats.get("raining_count",0))
         else:
             st.warning("◈ No AI reports found")
+            show_debug_info()
 
     # ── PAGE 4: PIPELINE OPERATIONS ──
     elif page == "◈ Pipeline Operations":
@@ -838,22 +929,28 @@ def main():
             st.divider()
             st.markdown("### ◈ S3 DATA LAKE STATUS")
             s3 = get_s3_client()
-            bucket = os.getenv("S3_BUCKET_NAME")
-            folders = {"raw/": ("◈ RAW DATA", "Source of truth"), "processed/": ("◈ PROCESSED", "Parquet format"),
-                       "reports/": ("◈ AI REPORTS", "Intelligence layer"), "logs/": ("◈ AUDIT LOGS", "Run history")}
-            cols = st.columns(4)
-            for i, (prefix, (label, desc)) in enumerate(folders.items()):
-                with cols[i]:
-                    try:
-                        r = s3.list_objects_v2(Bucket=bucket, Prefix=prefix)
-                        count = len(r.get("Contents", []))
-                        size = sum(o["Size"] for o in r.get("Contents", [])) / 1024
-                        st.metric(label, f"{count} FILES")
-                        st.caption(f"{size:.1f} KB • {desc}")
-                    except:
-                        st.metric(label, "N/A")
+            bucket = get_secret("S3_BUCKET_NAME")
+            
+            if s3 and bucket:
+                folders = {"raw/": ("◈ RAW DATA", "Source of truth"), "processed/": ("◈ PROCESSED", "Parquet format"),
+                           "reports/": ("◈ AI REPORTS", "Intelligence layer"), "logs/": ("◈ AUDIT LOGS", "Run history")}
+                cols = st.columns(4)
+                for i, (prefix, (label, desc)) in enumerate(folders.items()):
+                    with cols[i]:
+                        try:
+                            r = s3.list_objects_v2(Bucket=bucket, Prefix=prefix)
+                            count = len(r.get("Contents", []))
+                            size = sum(o["Size"] for o in r.get("Contents", [])) / 1024
+                            st.metric(label, f"{count} FILES")
+                            st.caption(f"{size:.1f} KB • {desc}")
+                        except:
+                            st.metric(label, "N/A")
+            else:
+                st.error("Could not connect to S3")
+                show_debug_info()
         else:
             st.warning("◈ No pipeline logs detected")
+            show_debug_info()
 
     # ── PAGE 5: PROJECT ARCHITECTURE ──
     elif page == "◈ Project Architecture":
