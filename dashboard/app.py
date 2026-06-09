@@ -42,10 +42,18 @@ st.markdown("""
 
 #MainMenu {visibility: hidden !important;}
 footer {visibility: hidden !important;}
-header {visibility: hidden !important;}
 [data-testid="stToolbar"] {visibility: hidden !important;}
 [data-testid="stDecoration"] {display: none !important;}
 [data-testid="stStatusWidget"] {visibility: hidden !important;}
+
+/* KEEP HEADER FOR MOBILE SIDEBAR TOGGLE BUTTON */
+header[data-testid="stHeader"] {
+    background: rgba(0,5,16,0.95) !important;
+    backdrop-filter: blur(10px) !important;
+    border-bottom: 1px solid rgba(0,212,255,0.3) !important;
+    height: 50px !important;
+    z-index: 999999 !important;
+}
 
 .stApp {
     background: #000000 !important;
@@ -86,7 +94,6 @@ header {visibility: hidden !important;}
     }
 }
 
-/* ═══════════ SIDEBAR - MOBILE FIX ═══════════ */
 [data-testid="stSidebar"] {
     background: linear-gradient(180deg, #000510 0%, #001020 100%) !important;
     border-right: 1px solid rgba(0,212,255,0.2) !important;
@@ -99,43 +106,35 @@ header {visibility: hidden !important;}
     }
 }
 
-/* MOBILE SIDEBAR TOGGLE BUTTON - MAKE VISIBLE */
-[data-testid="collapsedControl"] {
-    display: block !important;
+/* MOBILE SIDEBAR TOGGLE BUTTON - GLOWING & VISIBLE */
+button[kind="header"],
+[data-testid="collapsedControl"],
+[data-testid="stSidebarCollapsedControl"] {
+    display: flex !important;
     visibility: visible !important;
+    opacity: 1 !important;
     color: #00d4ff !important;
-    background: rgba(0,212,255,0.2) !important;
+    background: rgba(0,212,255,0.25) !important;
     border: 2px solid #00d4ff !important;
     border-radius: 8px !important;
-    padding: 10px !important;
-    position: fixed !important;
-    top: 15px !important;
-    left: 15px !important;
-    z-index: 999999 !important;
-    width: 45px !important;
-    height: 45px !important;
-    box-shadow: 0 0 20px rgba(0,212,255,0.5) !important;
+    padding: 8px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: 0 0 25px rgba(0,212,255,0.6) !important;
 }
 
+button[kind="header"] svg,
 [data-testid="collapsedControl"] svg {
     color: #00d4ff !important;
     fill: #00d4ff !important;
-    width: 24px !important;
-    height: 24px !important;
+    width: 26px !important;
+    height: 26px !important;
 }
 
+button[kind="header"]:hover,
 [data-testid="collapsedControl"]:hover {
-    background: rgba(0,212,255,0.4) !important;
-    transform: scale(1.05);
-}
-
-/* Always show menu button on mobile */
-@media (max-width: 768px) {
-    [data-testid="collapsedControl"] {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }
+    background: rgba(0,212,255,0.5) !important;
+    transform: scale(1.05) !important;
 }
 
 [data-testid="stMetric"] {
@@ -646,6 +645,24 @@ button:focus, a:focus {
     outline: 2px solid #00d4ff !important;
     outline-offset: 2px !important;
 }
+
+/* ════════════════════════════════════════════
+   MOBILE NAVIGATION CARD
+   ════════════════════════════════════════════ */
+.mobile-nav-card {
+    background: linear-gradient(135deg, rgba(0,212,255,0.15), rgba(0,100,200,0.08));
+    border: 2px solid rgba(0,212,255,0.4);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 15px;
+    box-shadow: 0 0 25px rgba(0,212,255,0.2);
+}
+
+@media (min-width: 769px) {
+    .mobile-nav-card {
+        display: none !important;
+    }
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -775,8 +792,28 @@ def dark_layout(fig, height=400):
     return fig
 
 
+# ═══════════════════════════════════════════════
+# PAGES LIST (Used by both sidebar AND mobile nav)
+# ═══════════════════════════════════════════════
+PAGES = [
+    "◈ Command Center",
+    "◈ City Intelligence",
+    "◈ AI Agent Reports",
+    "◈ Pipeline Operations",
+    "◈ Project Architecture",
+    "◈ Engineer Profile"
+]
+
+
 def main():
 
+    # Initialize page state
+    if 'current_page' not in st.session_state:
+        st.session_state.current_page = PAGES[0]
+
+    # ═══════════════════════════════════════════════
+    # SIDEBAR (works on desktop, click ☰ on mobile)
+    # ═══════════════════════════════════════════════
     with st.sidebar:
         st.markdown("""
         <div style="text-align:center; padding:20px 0 10px;">
@@ -793,14 +830,13 @@ def main():
 
         st.divider()
 
-        page = st.radio("◈ NAVIGATE", [
-            "◈ Command Center",
-            "◈ City Intelligence",
-            "◈ AI Agent Reports",
-            "◈ Pipeline Operations",
-            "◈ Project Architecture",
-            "◈ Engineer Profile"
-        ])
+        sidebar_page = st.radio(
+            "◈ NAVIGATE",
+            PAGES,
+            index=PAGES.index(st.session_state.current_page),
+            key="sidebar_nav"
+        )
+        st.session_state.current_page = sidebar_page
 
         st.divider()
 
@@ -833,6 +869,35 @@ def main():
         </div>
         """, unsafe_allow_html=True)
 
+    # ═══════════════════════════════════════════════
+    # MOBILE NAVIGATION (Only shows on mobile/tablet)
+    # ═══════════════════════════════════════════════
+    st.markdown('<div class="mobile-nav-card">', unsafe_allow_html=True)
+    mobile_col1, mobile_col2 = st.columns([1, 3])
+    with mobile_col1:
+        st.markdown("""
+        <div style="color:#00d4ff; font-family:'Orbitron',monospace; 
+                    font-size:0.75rem; letter-spacing:2px; padding-top:8px;">
+            ◈ NAVIGATE
+        </div>
+        """, unsafe_allow_html=True)
+    with mobile_col2:
+        mobile_page = st.selectbox(
+            "Select Page",
+            PAGES,
+            index=PAGES.index(st.session_state.current_page),
+            key="mobile_nav",
+            label_visibility="collapsed"
+        )
+        if mobile_page != st.session_state.current_page:
+            st.session_state.current_page = mobile_page
+            st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Use the selected page
+    page = st.session_state.current_page
+
+    # Load data
     df, source = load_latest_data()
     report = load_latest_report()
     logs = load_pipeline_logs()
