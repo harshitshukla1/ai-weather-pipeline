@@ -29,12 +29,14 @@ st.set_page_config(
 )
 
 st.markdown("""
-<style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
 
-* { font-family: 'Rajdhani', sans-serif !important; }
+* { 
+    font-family: 'Rajdhani', sans-serif !important;
+    box-sizing: border-box;
+}
 
-/* HIDE HAMBURGER MENU & FOOTER */
+/* HIDE STREAMLIT DEFAULTS */
 #MainMenu {visibility: hidden !important;}
 footer {visibility: hidden !important;}
 header {visibility: hidden !important;}
@@ -70,46 +72,121 @@ header {visibility: hidden !important;}
     100% { background-position: 50px 50px; }
 }
 
+/* ════════════════════════════════════════════
+   RESPONSIVE CONTAINER
+   ════════════════════════════════════════════ */
+.block-container {
+    padding: 1rem !important;
+    max-width: 100% !important;
+}
+
+@media (min-width: 768px) {
+    .block-container {
+        padding: 2rem !important;
+        padding-bottom: 4rem !important;
+    }
+}
+
+/* ════════════════════════════════════════════
+   SIDEBAR RESPONSIVE
+   ════════════════════════════════════════════ */
 [data-testid="stSidebar"] {
     background: linear-gradient(180deg, #000510 0%, #001020 100%) !important;
     border-right: 1px solid rgba(0,212,255,0.2) !important;
 }
 
-/* METRICS */
+@media (max-width: 768px) {
+    [data-testid="stSidebar"] {
+        width: 250px !important;
+    }
+    
+    [data-testid="stSidebar"][aria-expanded="true"] {
+        margin-left: 0 !important;
+    }
+}
+
+/* Sidebar toggle button visibility on mobile */
+[data-testid="collapsedControl"] {
+    color: #00d4ff !important;
+    background: rgba(0,212,255,0.1) !important;
+    border-radius: 8px !important;
+    padding: 8px !important;
+}
+
+/* ════════════════════════════════════════════
+   METRICS - RESPONSIVE
+   ════════════════════════════════════════════ */
 [data-testid="stMetric"] {
     background: linear-gradient(135deg, rgba(0,212,255,0.05), rgba(0,100,200,0.03));
     border: 1px solid rgba(0,212,255,0.2);
     border-radius: 12px;
-    padding: 15px !important;
+    padding: 12px !important;
     transition: all 0.4s ease;
     overflow: hidden;
+    margin-bottom: 8px;
 }
 
 [data-testid="stMetric"]:hover {
     border-color: rgba(0,212,255,0.6);
-    box-shadow: 0 0 30px rgba(0,212,255,0.2);
-    transform: translateY(-5px);
+    box-shadow: 0 0 20px rgba(0,212,255,0.2);
+    transform: translateY(-3px);
 }
 
 [data-testid="stMetricLabel"] {
     color: rgba(0,212,255,0.7) !important;
-    font-size: 0.75rem !important;
-    letter-spacing: 2px !important;
+    font-size: 0.65rem !important;
+    letter-spacing: 1.5px !important;
     text-transform: uppercase !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
 }
 
 [data-testid="stMetricValue"] {
     color: #00d4ff !important;
     font-family: 'Orbitron', monospace !important;
-    font-size: 1.6rem !important;
+    font-size: clamp(1rem, 3vw, 1.6rem) !important;
     font-weight: 700 !important;
     text-shadow: 0 0 10px rgba(0,212,255,0.5);
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
 }
 
+@media (max-width: 480px) {
+    [data-testid="stMetricLabel"] {
+        font-size: 0.55rem !important;
+        letter-spacing: 1px !important;
+    }
+    [data-testid="stMetricValue"] {
+        font-size: 0.9rem !important;
+    }
+    [data-testid="stMetric"] {
+        padding: 8px !important;
+    }
+}
+
+/* ════════════════════════════════════════════
+   HEADINGS RESPONSIVE
+   ════════════════════════════════════════════ */
 h1, h2, h3 {
     font-family: 'Orbitron', monospace !important;
     color: #00d4ff !important;
     letter-spacing: 2px !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+}
+
+h1 {
+    font-size: clamp(1.2rem, 4vw, 2.5rem) !important;
+}
+
+h2 {
+    font-size: clamp(1rem, 3vw, 2rem) !important;
+}
+
+h3 {
+    font-size: clamp(0.9rem, 2.5vw, 1.5rem) !important;
 }
 
 h2, h3 {
@@ -118,13 +195,22 @@ h2, h3 {
     color: #e6f1ff !important;
 }
 
+@media (max-width: 480px) {
+    h1, h2, h3 {
+        letter-spacing: 1px !important;
+    }
+}
+
+/* ════════════════════════════════════════════
+   BUTTONS RESPONSIVE
+   ════════════════════════════════════════════ */
 .stButton > button {
     background: transparent !important;
     color: #00d4ff !important;
     border: 1px solid rgba(0,212,255,0.5) !important;
     border-radius: 4px !important;
     font-family: 'Orbitron', monospace !important;
-    font-size: 0.7rem !important;
+    font-size: clamp(0.6rem, 1.5vw, 0.8rem) !important;
     letter-spacing: 2px !important;
     text-transform: uppercase !important;
     padding: 10px 20px !important;
@@ -138,6 +224,9 @@ h2, h3 {
     transform: translateY(-2px) !important;
 }
 
+/* ════════════════════════════════════════════
+   RADIO BUTTONS RESPONSIVE
+   ════════════════════════════════════════════ */
 .stRadio > div > label {
     color: rgba(0,212,255,0.7) !important;
     border: 1px solid rgba(0,212,255,0.15) !important;
@@ -145,6 +234,7 @@ h2, h3 {
     padding: 10px 14px !important;
     transition: all 0.3s ease !important;
     width: 100% !important;
+    font-size: clamp(0.75rem, 1.8vw, 0.85rem) !important;
 }
 
 .stRadio > div > label:hover {
@@ -153,28 +243,50 @@ h2, h3 {
     transform: translateX(4px);
 }
 
+/* ════════════════════════════════════════════
+   DIVIDERS
+   ════════════════════════════════════════════ */
 hr {
     border: none !important;
     height: 1px !important;
     background: linear-gradient(90deg, transparent, rgba(0,212,255,0.4), transparent) !important;
+    margin: 1rem 0 !important;
 }
 
+/* ════════════════════════════════════════════
+   ALERTS / INFO BOXES RESPONSIVE
+   ════════════════════════════════════════════ */
 .stAlert {
     background: rgba(0,212,255,0.05) !important;
     border: 1px solid rgba(0,212,255,0.2) !important;
     border-radius: 8px !important;
     color: #e6f1ff !important;
+    padding: 12px !important;
+    font-size: clamp(0.8rem, 2vw, 0.95rem) !important;
 }
 
-.stDataFrame {
-    border: 1px solid rgba(0,212,255,0.2) !important;
-    border-radius: 8px !important;
+.stAlert > div {
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
 }
 
 /* ════════════════════════════════════════════
-   EXPANDER FIX — HIDE BROKEN MATERIAL ICONS
+   DATAFRAME RESPONSIVE
    ════════════════════════════════════════════ */
+.stDataFrame {
+    border: 1px solid rgba(0,212,255,0.2) !important;
+    border-radius: 8px !important;
+    overflow-x: auto !important;
+    max-width: 100% !important;
+}
 
+.stDataFrame [data-testid="stDataFrameResizable"] {
+    overflow-x: auto !important;
+}
+
+/* ════════════════════════════════════════════
+   EXPANDER FIX - HIDE BROKEN ICONS
+   ════════════════════════════════════════════ */
 [data-testid="stExpander"] [data-testid="stIconMaterial"],
 .streamlit-expanderHeader [data-testid="stIconMaterial"],
 details summary span[data-testid="stIconMaterial"],
@@ -226,9 +338,10 @@ span[data-testid="stIconMaterial"] {
 [data-testid="stExpander"] summary {
     color: #00d4ff !important;
     font-family: 'Orbitron', monospace !important;
-    padding: 14px 18px !important;
-    font-size: 0.85rem !important;
+    padding: 12px 16px !important;
+    font-size: clamp(0.7rem, 1.8vw, 0.85rem) !important;
     letter-spacing: 1px !important;
+    word-wrap: break-word !important;
 }
 
 [data-testid="stExpander"] details[open] {
@@ -236,29 +349,40 @@ span[data-testid="stIconMaterial"] {
     background: rgba(0,212,255,0.05) !important;
 }
 
+/* ════════════════════════════════════════════
+   SELECTBOX RESPONSIVE
+   ════════════════════════════════════════════ */
 .stSelectbox > div > div {
     background: rgba(0,10,20,0.8) !important;
     border-color: rgba(0,212,255,0.3) !important;
     color: #e6f1ff !important;
+    font-size: clamp(0.8rem, 2vw, 0.95rem) !important;
 }
 
-::-webkit-scrollbar { width: 6px; }
+/* ════════════════════════════════════════════
+   SCROLLBAR
+   ════════════════════════════════════════════ */
+::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: #000510; }
 ::-webkit-scrollbar-thumb {
     background: rgba(0,212,255,0.3);
-    border-radius: 3px;
+    border-radius: 2px;
 }
 
+/* ════════════════════════════════════════════
+   SCIFI CARDS - RESPONSIVE
+   ════════════════════════════════════════════ */
 .scifi-card {
     background: linear-gradient(135deg, rgba(0,212,255,0.05), rgba(0,50,100,0.03));
     border: 1px solid rgba(0,212,255,0.15);
     border-radius: 12px;
-    padding: 24px;
+    padding: clamp(16px, 3vw, 24px);
     margin: 10px 0;
     transition: all 0.4s ease;
     position: relative;
     overflow: hidden;
-    word-wrap: break-word;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
 }
 
 .scifi-card::before {
@@ -275,15 +399,20 @@ span[data-testid="stIconMaterial"] {
     transform: translateY(-3px);
 }
 
+/* ════════════════════════════════════════════
+   HERO TITLE - FULLY RESPONSIVE
+   ════════════════════════════════════════════ */
 .hero-title {
     font-family: 'Orbitron', monospace;
-    font-size: clamp(1.5rem, 4vw, 2.8rem);
+    font-size: clamp(1.2rem, 5vw, 2.8rem);
     font-weight: 900;
     color: #00d4ff;
     text-shadow: 0 0 10px rgba(0,212,255,0.8), 0 0 30px rgba(0,212,255,0.4);
-    letter-spacing: 4px;
+    letter-spacing: clamp(1px, 0.5vw, 4px);
     text-align: center;
     animation: glow 3s ease-in-out infinite alternate;
+    word-wrap: break-word !important;
+    line-height: 1.3 !important;
 }
 
 @keyframes glow {
@@ -292,14 +421,18 @@ span[data-testid="stIconMaterial"] {
 }
 
 .hero-sub {
-    font-size: clamp(0.7rem, 1.5vw, 1rem);
+    font-size: clamp(0.6rem, 1.5vw, 1rem);
     color: rgba(230,241,255,0.6);
     text-align: center;
-    letter-spacing: 3px;
+    letter-spacing: clamp(1px, 0.3vw, 3px);
     text-transform: uppercase;
     margin-top: 10px;
+    padding: 0 10px;
 }
 
+/* ════════════════════════════════════════════
+   LIVE BADGE RESPONSIVE
+   ════════════════════════════════════════════ */
 .live-badge {
     display: inline-flex;
     align-items: center;
@@ -307,8 +440,8 @@ span[data-testid="stIconMaterial"] {
     background: rgba(0,255,136,0.1);
     border: 1px solid rgba(0,255,136,0.3);
     border-radius: 20px;
-    padding: 4px 16px;
-    font-size: 0.75rem;
+    padding: 4px 14px;
+    font-size: clamp(0.6rem, 1.5vw, 0.75rem);
     color: #00ff88;
     letter-spacing: 2px;
     text-transform: uppercase;
@@ -328,18 +461,22 @@ span[data-testid="stIconMaterial"] {
     100% { box-shadow: 0 0 0 0 rgba(0,255,136,0); }
 }
 
+/* ════════════════════════════════════════════
+   TECH BADGES RESPONSIVE
+   ════════════════════════════════════════════ */
 .tech-badge {
     display: inline-block;
     background: rgba(0,212,255,0.08);
     color: #00d4ff;
-    padding: 6px 16px;
+    padding: 5px 12px;
     border-radius: 3px;
-    font-size: 0.75rem;
+    font-size: clamp(0.6rem, 1.5vw, 0.75rem);
     border: 1px solid rgba(0,212,255,0.25);
     letter-spacing: 1px;
-    margin: 4px;
+    margin: 3px;
     font-family: 'Orbitron', monospace;
     transition: all 0.3s ease;
+    word-break: break-word !important;
 }
 
 .tech-badge:hover {
@@ -347,17 +484,24 @@ span[data-testid="stIconMaterial"] {
     transform: translateY(-2px);
 }
 
+/* ════════════════════════════════════════════
+   STAT NUMBER RESPONSIVE
+   ════════════════════════════════════════════ */
 .stat-number {
     font-family: 'Orbitron', monospace;
-    font-size: clamp(2rem, 5vw, 3rem);
+    font-size: clamp(1.5rem, 6vw, 3rem);
     font-weight: 900;
     color: #00d4ff;
     text-shadow: 0 0 20px rgba(0,212,255,0.5);
 }
 
+/* ════════════════════════════════════════════
+   LINKS
+   ════════════════════════════════════════════ */
 a {
     color: #00d4ff !important;
     text-decoration: none !important;
+    word-break: break-word !important;
 }
 
 a:hover {
@@ -365,19 +509,26 @@ a:hover {
     text-shadow: 0 0 8px rgba(0,212,255,0.6);
 }
 
+/* ════════════════════════════════════════════
+   PROGRESS BAR
+   ════════════════════════════════════════════ */
 .stProgress > div > div {
     background: linear-gradient(90deg, #00d4ff, #0066ff) !important;
 }
 
+/* ════════════════════════════════════════════
+   WORKFLOW STEPS RESPONSIVE
+   ════════════════════════════════════════════ */
 .workflow-step {
     background: linear-gradient(135deg, rgba(0,212,255,0.05), rgba(0,50,100,0.02));
     border: 1px solid rgba(0,212,255,0.2);
     border-left: 4px solid #00d4ff;
     border-radius: 8px;
-    padding: 16px 20px;
+    padding: clamp(12px, 2vw, 16px) clamp(14px, 2.5vw, 20px);
     margin: 12px 0;
     transition: all 0.4s ease;
     animation: slideIn 0.6s ease-out;
+    word-wrap: break-word !important;
 }
 
 @keyframes slideIn {
@@ -403,14 +554,23 @@ a:hover {
     50% { opacity: 1; transform: translateY(4px); }
 }
 
+/* ════════════════════════════════════════════
+   AI CAPABILITY CARDS - RESPONSIVE
+   ════════════════════════════════════════════ */
 .ai-cap-card {
     background: linear-gradient(135deg, rgba(0,212,255,0.08), rgba(0,100,200,0.04));
     border: 1px solid rgba(0,212,255,0.3);
     border-radius: 12px;
-    padding: 20px;
+    padding: clamp(12px, 2vw, 20px);
     text-align: center;
     transition: all 0.4s ease;
     height: 100%;
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    word-wrap: break-word !important;
 }
 
 .ai-cap-card:hover {
@@ -418,8 +578,13 @@ a:hover {
     box-shadow: 0 12px 40px rgba(0,212,255,0.25);
 }
 
+/* ════════════════════════════════════════════
+   TABS RESPONSIVE
+   ════════════════════════════════════════════ */
 .stTabs [data-baseweb="tab-list"] {
-    gap: 8px;
+    gap: 4px;
+    flex-wrap: wrap !important;
+    overflow-x: auto !important;
 }
 
 .stTabs [data-baseweb="tab"] {
@@ -429,6 +594,9 @@ a:hover {
     color: #8892b0;
     font-family: 'Orbitron', monospace;
     letter-spacing: 1px;
+    font-size: clamp(0.65rem, 1.5vw, 0.85rem) !important;
+    padding: 8px 12px !important;
+    white-space: nowrap !important;
 }
 
 .stTabs [aria-selected="true"] {
@@ -437,19 +605,158 @@ a:hover {
     color: #00d4ff !important;
 }
 
-.block-container {
-    padding-top: 2rem !important;
-    padding-bottom: 4rem !important;
+/* ════════════════════════════════════════════
+   PLOTLY CHARTS RESPONSIVE
+   ════════════════════════════════════════════ */
+.js-plotly-plot {
+    max-width: 100% !important;
+    overflow: hidden !important;
+}
+
+.plotly {
     max-width: 100% !important;
 }
 
-@media (max-width: 768px) {
-    .hero-title { font-size: 1.5rem !important; letter-spacing: 2px !important; }
-    .scifi-card { padding: 16px !important; }
-    [data-testid="stMetric"] { padding: 10px !important; }
-    [data-testid="stMetricValue"] { font-size: 1.2rem !important; }
+/* ════════════════════════════════════════════
+   COLUMNS - STACK ON MOBILE
+   ════════════════════════════════════════════ */
+@media (max-width: 640px) {
+    /* Force columns to stack on small screens */
+    [data-testid="column"] {
+        width: 100% !important;
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+        margin-bottom: 8px;
+    }
+    
+    /* But keep 2-column metrics in 2 columns even on mobile */
+    [data-testid="stHorizontalBlock"]:has([data-testid="stMetric"]) [data-testid="column"] {
+        width: 50% !important;
+        flex: 0 0 50% !important;
+        max-width: 50% !important;
+    }
 }
-</style>
+
+/* ════════════════════════════════════════════
+   TABLES RESPONSIVE
+   ════════════════════════════════════════════ */
+table {
+    width: 100% !important;
+    overflow-x: auto !important;
+    display: block !important;
+    white-space: nowrap !important;
+}
+
+@media (max-width: 768px) {
+    table {
+        font-size: 0.8rem !important;
+    }
+    
+    th, td {
+        padding: 6px !important;
+    }
+}
+
+/* ════════════════════════════════════════════
+   CODE BLOCKS RESPONSIVE
+   ════════════════════════════════════════════ */
+pre, code {
+    overflow-x: auto !important;
+    max-width: 100% !important;
+    font-size: clamp(0.7rem, 1.5vw, 0.85rem) !important;
+    word-wrap: break-word !important;
+}
+
+/* ════════════════════════════════════════════
+   IMAGES RESPONSIVE
+   ════════════════════════════════════════════ */
+img {
+    max-width: 100% !important;
+    height: auto !important;
+}
+
+/* ════════════════════════════════════════════
+   MOBILE SPECIFIC OPTIMIZATIONS
+   ════════════════════════════════════════════ */
+@media (max-width: 480px) {
+    /* Compact spacing on small phones */
+    .block-container {
+        padding: 0.5rem !important;
+    }
+    
+    /* Smaller margins */
+    .scifi-card {
+        margin: 8px 0 !important;
+    }
+    
+    /* Smaller workflow steps */
+    .workflow-step {
+        padding: 10px 12px !important;
+        margin: 8px 0 !important;
+    }
+    
+    /* Compact AI cards */
+    .ai-cap-card {
+        padding: 12px !important;
+        min-height: 80px;
+    }
+    
+    /* Tighter text */
+    .stMarkdown p {
+        font-size: 0.85rem !important;
+        line-height: 1.5 !important;
+    }
+    
+    /* Tab list scrollable on mobile */
+    .stTabs [data-baseweb="tab-list"] {
+        overflow-x: scroll !important;
+        flex-wrap: nowrap !important;
+    }
+}
+
+/* ════════════════════════════════════════════
+   TABLET OPTIMIZATIONS (iPad, etc)
+   ════════════════════════════════════════════ */
+@media (min-width: 481px) and (max-width: 1024px) {
+    .block-container {
+        padding: 1.5rem !important;
+    }
+    
+    h1 { font-size: 1.8rem !important; }
+    h2 { font-size: 1.4rem !important; }
+    h3 { font-size: 1.1rem !important; }
+}
+
+/* ════════════════════════════════════════════
+   LARGE DESKTOP OPTIMIZATIONS
+   ════════════════════════════════════════════ */
+@media (min-width: 1920px) {
+    .block-container {
+        max-width: 1800px !important;
+        margin: 0 auto !important;
+    }
+}
+
+/* ════════════════════════════════════════════
+   PRINT STYLES
+   ════════════════════════════════════════════ */
+@media print {
+    [data-testid="stSidebar"] { display: none !important; }
+    .stApp::before { display: none !important; }
+}
+
+/* ════════════════════════════════════════════
+   ACCESSIBILITY - FOCUS STATES
+   ════════════════════════════════════════════ */
+*:focus {
+    outline: 2px solid rgba(0,212,255,0.5) !important;
+    outline-offset: 2px !important;
+}
+
+button:focus, a:focus {
+    outline: 2px solid #00d4ff !important;
+    outline-offset: 2px !important;
+}
 """, unsafe_allow_html=True)
 
 
